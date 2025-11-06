@@ -27,14 +27,6 @@ def home():
     """Main page"""
     return render_template('index.html')
 
-@app.route('/health')
-def health():
-    """Check app-health"""
-    return jsonify({
-        'status': 'healthy',
-        'service': 'service-checker'
-    })
-
 
 @app.route('/info')
 def info():
