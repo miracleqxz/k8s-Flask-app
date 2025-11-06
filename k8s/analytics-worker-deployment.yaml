@@ -15,7 +15,35 @@ spec:
       labels:
         app: analytics-worker
     spec:
-      enableServiceLinks: false  
+      enableServiceLinks: false
+      
+      initContainers:
+      - name: wait-for-postgres
+        image: postgres:16
+        command: 
+        - sh
+        - -c
+        - |
+          echo "Waiting for PostgreSQL..."
+          until pg_isready -h postgres.service-checker.svc.cluster.local -U postgres; do 
+            echo "PostgreSQL not ready, waiting..."
+            sleep 2
+          done
+          echo "PostgreSQL is ready!"
+      
+      - name: wait-for-rabbitmq
+        image: curlimages/curl:latest
+        command:
+        - sh
+        - -c
+        - |
+          echo "Waiting for RabbitMQ..."
+          until curl -s -u guest:guest http://rabbitmq.service-checker.svc.cluster.local:15672/api/overview | grep -q version; do
+            echo "RabbitMQ not ready, waiting..."
+            sleep 2
+          done
+          echo "RabbitMQ is ready!"
+      
       containers:
       - name: analytics-worker
         image: ghcr.io/miracleqxz/k8s-flask-app:latest

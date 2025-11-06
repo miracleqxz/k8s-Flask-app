@@ -15,7 +15,47 @@ spec:
       labels:
         app: flask-app
     spec:
-      enableServiceLinks: false  
+      enableServiceLinks: false
+
+      initContainers:
+      - name: wait-for-postgres
+        image: postgres:16
+        command: 
+        - sh
+        - -c
+        - |
+          echo "Waiting for PostgreSQL..."
+          until pg_isready -h postgres.service-checker.svc.cluster.local -U postgres; do 
+            echo "PostgreSQL not ready, waiting..."
+            sleep 2
+          done
+          echo "PostgreSQL is ready!"
+      - name: wait-for-redis
+        image: redis:7-alpine
+        command:
+        - sh
+        - -c
+        - |
+          echo "Waiting for Redis..."
+          until redis-cli -h redis.service-checker.svc.cluster.local ping; do
+            echo "Redis not ready, waiting..."
+            sleep 2
+          done
+          echo "Redis is ready!"
+      - name: wait-for-elasticsearch
+        image: curlimages/curl:latest
+        command:
+        - sh
+        - -c
+        - |
+          echo "Waiting for Elasticsearch..."
+          until curl -s http://elasticsearch.service-checker.svc.cluster.local:9200/_cluster/health | grep -q '"status":"green\|yellow"'; do
+            echo "Elasticsearch not ready, waiting..."
+            sleep 2
+          done
+          echo "Elasticsearch is ready!"
+      
+      
       containers:
       - name: flask-app
         image: ghcr.io/miracleqxz/k8s-flask-app:latest

@@ -1,0 +1,38 @@
+
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: db-init
+  namespace: service-checker
+spec:
+  ttlSecondsAfterFinished: 100
+  template:
+    spec:
+      enableServiceLinks: false
+      restartPolicy: OnFailure
+      containers:
+      - name: init
+        image: ghcr.io/miracleqxz/k8s-flask-app:latest
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            echo "Initializing database..."
+            python init_db.py
+            echo "Indexing movies..."
+            python index_movies.py
+            echo "Done!"
+        env:
+        - name: POSTGRES_HOST
+          value: "postgres.service-checker.svc.cluster.local"
+        - name: POSTGRES_PORT
+          value: "5432"
+        - name: POSTGRES_DB
+          value: "postgres"
+        - name: POSTGRES_USER
+          value: "postgres"
+        - name: POSTGRES_PASSWORD
+          value: "postgres"
+        - name: ELASTICSEARCH_HOST
+          value: "elasticsearch.service-checker.svc.cluster.local"
+        - name: ELASTICSEARCH_PORT
+          value: "9200"
