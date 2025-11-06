@@ -5,7 +5,7 @@ metadata:
   name: db-init
   namespace: service-checker
 spec:
-  ttlSecondsAfterFinished: 100
+  ttlSecondsAfterFinished: 3600
   template:
     spec:
       enableServiceLinks: false
