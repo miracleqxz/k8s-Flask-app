@@ -25,47 +25,47 @@ spec:
         env:
         - name: ENV
           value: "production"
-        - name: POSTGRES_HOST
+        - name: APP_POSTGRES_HOST
           value: "postgres.service-checker.svc.cluster.local"
-        - name: POSTGRES_PORT
+        - name: APP_POSTGRES_PORT
           value: "5432"
-        - name: POSTGRES_DB
+        - name: APP_POSTGRES_DB
           value: "postgres"
-        - name: POSTGRES_USER
+        - name: APP_POSTGRES_USER
           value: "postgres"
-        - name: POSTGRES_PASSWORD
+        - name: APP_POSTGRES_PASSWORD
           value: "postgres"
-        - name: REDIS_HOST
+        - name: APP_REDIS_HOST
           value: "redis.service-checker.svc.cluster.local"
-        - name: REDIS_PORT
+        - name: APP_REDIS_PORT
           value: "6379"
-        - name: RABBITMQ_HOST
+        - name: APP_RABBITMQ_HOST
           value: "rabbitmq.service-checker.svc.cluster.local"
-        - name: RABBITMQ_PORT
+        - name: APP_RABBITMQ_PORT
           value: "5672"
-        - name: RABBITMQ_USER
+        - name: APP_RABBITMQ_USER
           value: "guest"
-        - name: RABBITMQ_PASSWORD
+        - name: APP_RABBITMQ_PASSWORD
           value: "guest"
-        - name: ELASTICSEARCH_HOST
+        - name: APP_ELASTICSEARCH_HOST
           value: "elasticsearch.service-checker.svc.cluster.local"
-        - name: ELASTICSEARCH_PORT
+        - name: APP_ELASTICSEARCH_PORT
           value: "9200"
-        - name: MINIO_HOST
+        - name: APP_MINIO_HOST
           value: "minio.service-checker.svc.cluster.local"
-        - name: MINIO_PORT
+        - name: APP_MINIO_PORT
           value: "9000"
-        - name: MINIO_ACCESS_KEY
+        - name: APP_MINIO_ACCESS_KEY
           value: "minioadmin"
-        - name: MINIO_SECRET_KEY
+        - name: APP_MINIO_SECRET_KEY
           value: "minioadmin"
-        - name: CONSUL_HOST
+        - name: APP_CONSUL_HOST
           value: "consul.service-checker.svc.cluster.local"
-        - name: CONSUL_PORT
+        - name: APP_CONSUL_PORT
           value: "8500"
-        - name: PROMETHEUS_HOST
+        - name: APP_PROMETHEUS_HOST
           value: "prometheus.service-checker.svc.cluster.local"
-        - name: PROMETHEUS_PORT
+        - name: APP_PROMETHEUS_PORT
           value: "9090"
         resources:
           requests:

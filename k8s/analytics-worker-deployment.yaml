@@ -23,23 +23,23 @@ spec:
         env:
         - name: ENV
           value: "production"
-        - name: POSTGRES_HOST
+        - name: APP_POSTGRES_HOST
           value: "postgres.service-checker.svc.cluster.local"
-        - name: POSTGRES_PORT
+        - name: APP_POSTGRES_PORT
           value: "5432"
-        - name: POSTGRES_DB
+        - name: APP_POSTGRES_DB
           value: "postgres"
-        - name: POSTGRES_USER
+        - name: APP_POSTGRES_USER
           value: "postgres"
-        - name: POSTGRES_PASSWORD
+        - name: APP_POSTGRES_PASSWORD
           value: "postgres"
-        - name: RABBITMQ_HOST
+        - name: APP_RABBITMQ_HOST
           value: "rabbitmq.service-checker.svc.cluster.local"
-        - name: RABBITMQ_PORT
+        - name: APP_RABBITMQ_PORT
           value: "5672"
-        - name: RABBITMQ_USER
+        - name: APP_RABBITMQ_USER
           value: "guest"
-        - name: RABBITMQ_PASSWORD
+        - name: APP_RABBITMQ_PASSWORD
           value: "guest"
         resources:
           requests:
