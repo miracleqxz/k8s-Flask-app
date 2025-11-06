@@ -15,6 +15,7 @@ spec:
       labels:
         app: flask-app
     spec:
+      enableServiceLinks: false  
       containers:
       - name: flask-app
         image: ghcr.io/miracleqxz/k8s-flask-app:latest
@@ -23,49 +24,47 @@ spec:
         - containerPort: 5000
           name: http
         env:
-        - name: ENV
-          value: "production"
-        - name: APP_POSTGRES_HOST
+        - name: POSTGRES_HOST
           value: "postgres.service-checker.svc.cluster.local"
-        - name: APP_POSTGRES_PORT
+        - name: POSTGRES_PORT
           value: "5432"
-        - name: APP_POSTGRES_DB
+        - name: POSTGRES_DB
           value: "postgres"
-        - name: APP_POSTGRES_USER
+        - name: POSTGRES_USER
           value: "postgres"
-        - name: APP_POSTGRES_PASSWORD
+        - name: POSTGRES_PASSWORD
           value: "postgres"
-        - name: APP_REDIS_HOST
+        - name: REDIS_HOST
           value: "redis.service-checker.svc.cluster.local"
-        - name: APP_REDIS_PORT
+        - name: REDIS_PORT
           value: "6379"
-        - name: APP_RABBITMQ_HOST
+        - name: RABBITMQ_HOST
           value: "rabbitmq.service-checker.svc.cluster.local"
-        - name: APP_RABBITMQ_PORT
+        - name: RABBITMQ_PORT
           value: "5672"
-        - name: APP_RABBITMQ_USER
+        - name: RABBITMQ_USER
           value: "guest"
-        - name: APP_RABBITMQ_PASSWORD
+        - name: RABBITMQ_PASSWORD
           value: "guest"
-        - name: APP_ELASTICSEARCH_HOST
+        - name: ELASTICSEARCH_HOST
           value: "elasticsearch.service-checker.svc.cluster.local"
-        - name: APP_ELASTICSEARCH_PORT
+        - name: ELASTICSEARCH_PORT
           value: "9200"
-        - name: APP_MINIO_HOST
+        - name: MINIO_HOST
           value: "minio.service-checker.svc.cluster.local"
-        - name: APP_MINIO_PORT
+        - name: MINIO_PORT
           value: "9000"
-        - name: APP_MINIO_ACCESS_KEY
+        - name: MINIO_ACCESS_KEY
           value: "minioadmin"
-        - name: APP_MINIO_SECRET_KEY
+        - name: MINIO_SECRET_KEY
           value: "minioadmin"
-        - name: APP_CONSUL_HOST
+        - name: CONSUL_HOST
           value: "consul.service-checker.svc.cluster.local"
-        - name: APP_CONSUL_PORT
+        - name: CONSUL_PORT
           value: "8500"
-        - name: APP_PROMETHEUS_HOST
+        - name: PROMETHEUS_HOST
           value: "prometheus.service-checker.svc.cluster.local"
-        - name: APP_PROMETHEUS_PORT
+        - name: PROMETHEUS_PORT
           value: "9090"
         resources:
           requests:

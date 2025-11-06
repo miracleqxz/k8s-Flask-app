@@ -15,31 +15,30 @@ spec:
       labels:
         app: analytics-worker
     spec:
+      enableServiceLinks: false  
       containers:
       - name: analytics-worker
         image: ghcr.io/miracleqxz/k8s-flask-app:latest
         imagePullPolicy: Always
         command: ["python", "analytics_worker.py"]
         env:
-        - name: ENV
-          value: "production"
-        - name: APP_POSTGRES_HOST
+        - name: POSTGRES_HOST
           value: "postgres.service-checker.svc.cluster.local"
-        - name: APP_POSTGRES_PORT
+        - name: POSTGRES_PORT
           value: "5432"
-        - name: APP_POSTGRES_DB
+        - name: POSTGRES_DB
           value: "postgres"
-        - name: APP_POSTGRES_USER
+        - name: POSTGRES_USER
           value: "postgres"
-        - name: APP_POSTGRES_PASSWORD
+        - name: POSTGRES_PASSWORD
           value: "postgres"
-        - name: APP_RABBITMQ_HOST
+        - name: RABBITMQ_HOST
           value: "rabbitmq.service-checker.svc.cluster.local"
-        - name: APP_RABBITMQ_PORT
+        - name: RABBITMQ_PORT
           value: "5672"
-        - name: APP_RABBITMQ_USER
+        - name: RABBITMQ_USER
           value: "guest"
-        - name: APP_RABBITMQ_PASSWORD
+        - name: RABBITMQ_PASSWORD
           value: "guest"
         resources:
           requests:
