@@ -1,8 +1,86 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+  namespace: service-checker
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 15s
+      evaluation_interval: 15s
+      external_labels:
+        cluster: 'microk8s'
+        namespace: 'service-checker'
+
+    # Scrape configurations
+    scrape_configs:
+      # Prometheus itself
+      - job_name: 'prometheus'
+        static_configs:
+        - targets: ['localhost:9090']
+
+      - job_name: 'postgres'
+        static_configs:
+        - targets: ['postgres-exporter.service-checker.svc.cluster.local:9187']
+          labels:
+            service: 'postgres'
+            component: 'database'
+
+      - job_name: 'redis'
+        static_configs:
+        - targets: ['redis-exporter.service-checker.svc.cluster.local:9121']
+          labels:
+            service: 'redis'
+            component: 'cache'
+
+      # RabbitMQ (built-in Prometheus plugin on port 15692)
+      - job_name: 'rabbitmq'
+        static_configs:
+        - targets: ['rabbitmq.service-checker.svc.cluster.local:15692']
+          labels:
+            service: 'rabbitmq'
+            component: 'queue'
+
+      - job_name: 'elasticsearch'
+        metrics_path: '/_prometheus/metrics'
+        static_configs:
+        - targets: ['elasticsearch.service-checker.svc.cluster.local:9200']
+          labels:
+            service: 'elasticsearch'
+            component: 'search'
+
+      - job_name: 'minio'
+        metrics_path: '/minio/v2/metrics/cluster'
+        static_configs:
+        - targets: ['minio.service-checker.svc.cluster.local:9000']
+          labels:
+            service: 'minio'
+            component: 'storage'
+
+      - job_name: 'flask-app'
+        metrics_path: '/metrics'
+        kubernetes_sd_configs:
+        - role: pod
+          namespaces:
+            names:
+            - service-checker
+        relabel_configs:
+        # Only scrape pods with label app=flask-app
+        - source_labels: [__meta_kubernetes_pod_label_app]
+          regex: flask-app
+          action: keep
+        # Add pod name as label
+        - source_labels: [__meta_kubernetes_pod_name]
+          target_label: pod
+
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: prometheus
   namespace: service-checker
+  labels:
+    app: prometheus
 spec:
   replicas: 1
   selector:
@@ -15,27 +93,64 @@ spec:
     spec:
       containers:
       - name: prometheus
-        image: prom/prometheus:latest
+        image: prom/prometheus:v2.48.0
+        args:
+        - '--config.file=/etc/prometheus/prometheus.yml'
+        - '--storage.tsdb.path=/prometheus'
+        - '--storage.tsdb.retention.time=15d'
+        - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+        - '--web.console.templates=/usr/share/prometheus/consoles'
+        - '--web.enable-lifecycle'
         ports:
-        - containerPort: 9090
+        - name: http
+          containerPort: 9090
+          protocol: TCP
+        volumeMounts:
+        - name: prometheus-config
+          mountPath: /etc/prometheus
+        - name: prometheus-storage
+          mountPath: /prometheus
         resources:
           requests:
-            memory: "256Mi"
-            cpu: "200m"
-          limits:
             memory: "512Mi"
-            cpu: "500m"
+            cpu: "250m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+        livenessProbe:
+          httpGet:
+            path: /-/healthy
+            port: 9090
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+        readinessProbe:
+          httpGet:
+            path: /-/ready
+            port: 9090
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+      volumes:
+      - name: prometheus-config
+        configMap:
+          name: prometheus-config
+      - name: prometheus-storage
+        emptyDir: {}
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: prometheus
   namespace: service-checker
+  labels:
+    app: prometheus
 spec:
   type: LoadBalancer
   selector:
     app: prometheus
   ports:
-  - port: 9090
+  - name: http
+    port: 9090
     targetPort: 9090
-  
+    protocol: TCP

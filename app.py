@@ -16,6 +16,12 @@ import io
 from flask import render_template
 from database.movies_db import get_all_movies, get_movie_by_id
 from database.movie_cache import get_cached_movie, set_cached_movie
+from metrics import (
+    metrics_endpoint, track_request,
+    CACHE_HIT_COUNT, CACHE_MISS_COUNT,
+    SEARCH_QUERY_COUNT, SEARCH_RESULTS_COUNT,
+    MOVIE_VIEWS
+)
 
 
 app = Flask(__name__)
@@ -23,6 +29,7 @@ app.config.from_object(Config)
 
 
 @app.route('/')
+@track_request
 def home():
     """Main page"""
     return render_template('index.html')
@@ -89,46 +96,42 @@ def check_prometheus_endpoint():
     return jsonify(result), status_code
 
 @app.route('/api/search')
-def api_search():
-    """Search movies endpoint with caching and analytics"""
-    query = request.args.get('q', '')
+def search():
+    query = request.args.get('q', '').strip()
     
     if not query:
-        return jsonify({'error': 'Query parameter "q" required'}), 400
+        return jsonify({'error': 'Query parameter "q" is required'}), 400
     
-    # Check cache
-    from database.redis_cache import get_cached_search, set_cached_search
+    # Track search
+    SEARCH_QUERY_COUNT.inc()
     
-    cached_results = get_cached_search(query)
-    
-    if cached_results is not None:
-        # Cache hit - publish to queue
-        from database.rabbitmq_analytics import publish_search_event
-        publish_search_event(query, len(cached_results), cached=True)
+    try:
+        # Check Redis cache first
+        cache_key = f"search:{query}"
+        cached_result = get_from_cache(cache_key)
         
-        return jsonify({
-            'query': query,
-            'count': len(cached_results),
-            'results': cached_results,
-            'cached': True
-        })
-    
-    # Cache miss - query ES
-    results = search_movies_es(query, size=20)
-    
-    # Store in cache
-    set_cached_search(query, results, ttl=300)
-    
-    # Publish to analytics queue
-    from database.rabbitmq_analytics import publish_search_event
-    publish_search_event(query, len(results), cached=False)
-    
-    return jsonify({
-        'query': query,
-        'count': len(results),
-        'results': results,
-        'cached': False
-    })
+        if cached_result:
+            CACHE_HIT_COUNT.inc()
+            result = json.loads(cached_result)
+        else:
+            CACHE_MISS_COUNT.inc()
+            # Search in Elasticsearch
+            result = search_movies(query)
+            
+            # Cache the result
+            save_to_cache(cache_key, json.dumps(result), ttl=300)
+        
+        # Track results count
+        SEARCH_RESULTS_COUNT.observe(len(result))
+        
+        # Log search query to database
+        save_search_query(query, len(result))
+        
+        return jsonify(result)
+        
+    except Exception as e:
+        print(f"Search error: {e}")
+        return jsonify({'error': 'Search failed', 'details': str(e)}), 500
 
 @app.route('/api/poster/<filename>')
 def api_poster(filename):
@@ -244,6 +247,7 @@ def service_detail(service_name):
 
 
 @app.route('/movies')
+@track_request
 def movies_list():
     movies = get_all_movies()
     return render_template('movies.html', movies=movies)
@@ -251,7 +255,8 @@ def movies_list():
 
 @app.route('/movie/<int:movie_id>')
 def movie_detail(movie_id):
-    """Movie detail page with caching"""
+
+    MOVIE_VIEWS.labels(movie_id=movie_id).inc()
     
     # Try cache first
     cached_movie, from_cache = get_cached_movie(movie_id)
@@ -270,7 +275,7 @@ def movie_detail(movie_id):
             from_cache=True
         )
     
-    # Not in cache - get from database
+    
     print(f"Fetching from DATABASE")
     movie = get_movie_by_id(movie_id)
     
@@ -308,6 +313,14 @@ def health():
         'service': 'flask-app',
         'version': '1.0.0'
     }), 200
+
+
+
+@app.route('/metrics')
+def metrics():
+    """Prometheus metrics endpoint"""
+    return metrics_endpoint()
+
 
 
 if __name__ == '__main__':
