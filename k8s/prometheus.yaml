@@ -12,12 +12,11 @@ data:
         cluster: 'microk8s'
         namespace: 'service-checker'
 
-    # Scrape configurations
     scrape_configs:
-      # Prometheus itself
       - job_name: 'prometheus'
         static_configs:
         - targets: ['localhost:9090']
+
 
       - job_name: 'postgres'
         static_configs:
@@ -33,29 +32,12 @@ data:
             service: 'redis'
             component: 'cache'
 
-      # RabbitMQ (built-in Prometheus plugin on port 15692)
       - job_name: 'rabbitmq'
         static_configs:
         - targets: ['rabbitmq.service-checker.svc.cluster.local:15692']
           labels:
             service: 'rabbitmq'
             component: 'queue'
-
-      - job_name: 'elasticsearch'
-        metrics_path: '/_prometheus/metrics'
-        static_configs:
-        - targets: ['elasticsearch.service-checker.svc.cluster.local:9200']
-          labels:
-            service: 'elasticsearch'
-            component: 'search'
-
-      - job_name: 'minio'
-        metrics_path: '/minio/v2/metrics/cluster'
-        static_configs:
-        - targets: ['minio.service-checker.svc.cluster.local:9000']
-          labels:
-            service: 'minio'
-            component: 'storage'
 
       - job_name: 'flask-app'
         metrics_path: '/metrics'
@@ -65,14 +47,20 @@ data:
             names:
             - service-checker
         relabel_configs:
-        # Only scrape pods with label app=flask-app
+        # Keep only pods with label app=flask-app
         - source_labels: [__meta_kubernetes_pod_label_app]
           regex: flask-app
           action: keep
+        # Use pod IP and port 5000
+        - source_labels: [__meta_kubernetes_pod_ip]
+          target_label: __address__
+          replacement: ${1}:5000
         # Add pod name as label
         - source_labels: [__meta_kubernetes_pod_name]
           target_label: pod
-
+        # Add node name
+        - source_labels: [__meta_kubernetes_pod_node_name]
+          target_label: node
 ---
 apiVersion: apps/v1
 kind: Deployment
