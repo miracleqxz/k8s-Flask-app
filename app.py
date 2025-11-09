@@ -22,6 +22,7 @@ from metrics import (
     SEARCH_QUERY_COUNT, SEARCH_RESULTS_COUNT,
     MOVIE_VIEWS
 )
+from metrics import track_request
 
 
 app = Flask(__name__)
@@ -254,6 +255,7 @@ def movies_list():
 
 
 @app.route('/movie/<int:movie_id>')
+@track_request
 def movie_detail(movie_id):
 
     MOVIE_VIEWS.labels(movie_id=movie_id).inc()
@@ -306,6 +308,7 @@ def clear_movies_cache():
 
 
 @app.route('/health')
+@track_request
 def health():
     """Health check endpoint for Kubernetes"""
     return jsonify({
@@ -317,6 +320,7 @@ def health():
 
 
 @app.route('/metrics')
+@track_request
 def metrics():
     """Prometheus metrics endpoint"""
     return metrics_endpoint()
