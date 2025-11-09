@@ -1,0 +1,12 @@
+namespace        = "service-checker"
+metallb_ip_range = "127.0.0.1-127.0.0.20"
+
+enable_argocd     = true
+enable_monitoring = true
+
+argocd_version = "5.51.4"
+github_repo_url = "https://github.com/YOUR_USERNAME/k8s-Flask-app.git"
+
+# Secrets (DO NOT COMMIT terraform.tfvars!)
+telegram_bot_token = "YOUR_BOT_TOKEN_HERE"
+telegram_chat_id   = "YOUR_CHAT_ID_HERE"

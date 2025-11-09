@@ -1,95 +1,49 @@
-
-
 variable "namespace" {
-  description = "Kubernetes namespace for the project"
+  description = "Main application namespace"
   type        = string
   default     = "service-checker"
 }
 
-variable "flask_image" {
-  description = "Flask application Docker image"
+variable "metallb_ip_range" {
+  description = "IP range for MetalLB"
   type        = string
-  default     = "ghcr.io/miracleqxz/k8s-flask-app:latest"
+  default     = "127.0.0.1-127.0.0.20"
 }
 
-variable "flask_replicas" {
-  description = "Number of Flask app replicas"
-  type        = number
-  default     = 2
+variable "enable_argocd" {
+  description = "Enable ArgoCD installation"
+  type        = bool
+  default     = true
 }
 
-variable "postgres_image" {
-  description = "PostgreSQL Docker image"
-  type        = string
-  default     = "postgres:16"
+variable "enable_monitoring" {
+  description = "Enable monitoring stack (Prometheus, Grafana)"
+  type        = bool
+  default     = true
 }
 
-variable "redis_image" {
-  description = "Redis Docker image"
+variable "argocd_version" {
+  description = "ArgoCD Helm chart version"
   type        = string
-  default     = "redis:7-alpine"
+  default     = "5.51.4"
 }
 
-variable "rabbitmq_image" {
-  description = "RabbitMQ Docker image"
+variable "github_repo_url" {
+  description = "GitHub repository URL for ArgoCD"
   type        = string
-  default     = "rabbitmq:3.12-management"
+  default     = "https://github.com/miracleqxz/k8s-Flask-app.git"
 }
 
-variable "elasticsearch_image" {
-  description = "Elasticsearch Docker image"
+variable "telegram_bot_token" {
+  description = "Telegram bot token (sensitive)"
   type        = string
-  default     = "docker.elastic.co/elasticsearch/elasticsearch:8.11.0"
-}
-
-variable "minio_image" {
-  description = "MinIO Docker image"
-  type        = string
-  default     = "minio/minio:latest"
-}
-
-variable "consul_image" {
-  description = "Consul Docker image"
-  type        = string
-  default     = "consul:1.17"
-}
-
-variable "prometheus_image" {
-  description = "Prometheus Docker image"
-  type        = string
-  default     = "prom/prometheus:v2.48.0"
-}
-
-variable "postgres_password" {
-  description = "PostgreSQL password"
-  type        = string
-  default     = "postgres"
   sensitive   = true
+  default     = ""
 }
 
-variable "rabbitmq_user" {
-  description = "RabbitMQ username"
+variable "telegram_chat_id" {
+  description = "Telegram chat ID"
   type        = string
-  default     = "guest"
-}
-
-variable "rabbitmq_password" {
-  description = "RabbitMQ password"
-  type        = string
-  default     = "guest"
   sensitive   = true
-}
-
-variable "minio_access_key" {
-  description = "MinIO access key"
-  type        = string
-  default     = "minioadmin"
-  sensitive   = true
-}
-
-variable "minio_secret_key" {
-  description = "MinIO secret key"
-  type        = string
-  default     = "minioadmin"
-  sensitive   = true
+  default     = ""
 }

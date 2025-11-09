@@ -1,17 +1,90 @@
-# Main Terraform configuration
-# Movie Database Application - Full Stack
+resource "kubernetes_namespace" "service_checker" {
+  metadata {
+    name = var.namespace
 
-# This configuration deploys a complete microservices application
-# with the following components:
-# - PostgreSQL (database)
-# - Redis (caching)
-# - RabbitMQ (message queue)
-# - Elasticsearch (search engine)
-# - MinIO (object storage)
-# - Consul (service discovery)
-# - Prometheus (monitoring)
-# - Flask App (web application)
-# - Analytics Worker (background processing)
+    labels = {
+      name        = var.namespace
+      managed-by  = "terraform"
+      environment = "production"
+    }
+  }
+}
 
-# All resources are deployed in a single Kubernetes namespace
-# with proper service discovery and LoadBalancer access
+
+resource "kubernetes_secret" "telegram_bot" {
+  metadata {
+    name      = "telegram-bot"
+    namespace = kubernetes_namespace.service_checker.metadata[0].name
+  }
+
+  data = {
+    bot-token = var.telegram_bot_token
+    chat-id   = var.telegram_chat_id
+  }
+
+  type = "Opaque"
+}
+
+# MetalLB IP Address Pool
+resource "kubernetes_config_map" "metallb_config" {
+  metadata {
+    name      = "config"
+    namespace = "metallb-system"
+  }
+
+  data = {
+    config = <<-EOT
+      address-pools:
+      - name: default
+        protocol: layer2
+        addresses:
+        - ${var.metallb_ip_range}
+    EOT
+  }
+
+  depends_on = [
+    null_resource.enable_metallb
+  ]
+}
+
+
+resource "null_resource" "enable_metallb" {
+  provisioner "local-exec" {
+    command = "microk8s enable metallb:${var.metallb_ip_range}"
+  }
+
+  # Only run once
+  triggers = {
+    ip_range = var.metallb_ip_range
+  }
+}
+
+resource "null_resource" "enable_dns" {
+  provisioner "local-exec" {
+    command = "microk8s enable dns"
+  }
+}
+
+resource "null_resource" "enable_storage" {
+  provisioner "local-exec" {
+    command = "microk8s enable hostpath-storage"
+  }
+}
+
+resource "null_resource" "enable_helm" {
+  provisioner "local-exec" {
+    command = "microk8s enable helm3"
+  }
+}
+
+module "argocd" {
+  source = "./modules/argocd"
+  count  = var.enable_argocd ? 1 : 0
+
+  argocd_version  = var.argocd_version
+  github_repo_url = var.github_repo_url
+
+  depends_on = [
+    kubernetes_namespace.service_checker
+  ]
+}

@@ -1,0 +1,23 @@
+# Terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+crash.log
+crash.*.log
+
+# Variable files (may contain secrets)
+*.tfvars
+!terraform.tfvars.example
+
+# Environment-specific
+environments/*/*.tfvars
+!environments/*/*.tfvars.example
+
+# Backup files
+*.backup
+*.bak
+
+# Sensitive
+.env
+secrets/

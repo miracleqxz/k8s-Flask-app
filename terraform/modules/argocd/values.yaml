@@ -1,0 +1,10 @@
+server:
+  service:
+    type: LoadBalancer
+  extraArgs:
+    - --insecure
+
+configs:
+  repositories:
+    - url: ${github_repo}
+      type: git
