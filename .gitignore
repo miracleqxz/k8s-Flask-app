@@ -1,0 +1,29 @@
+# Secrets - NEVER COMMIT
+k8s/secrets/*
+!k8s/secrets/*.example.yaml
+*secret*.yaml
+*.env
+.env.*
+
+# Terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+
+# Local configs
+*.local
+
+# Secrets
+k8s/telegram-secret.yaml
+k8s/*-secret.yaml
+*secret*.yaml
+*.env
+
+# Python
+__pycache__/
+venv/
+
+# Terraform
+.terraform/
+*.tfstate

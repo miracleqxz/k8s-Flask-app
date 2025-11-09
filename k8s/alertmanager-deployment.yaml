@@ -1,0 +1,123 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alertmanager-config
+  namespace: service-checker
+data:
+  alertmanager.yml: |
+    global:
+      resolve_timeout: 5m
+
+    route:
+      receiver: 'telegram'
+      group_by: ['alertname', 'cluster', 'service']
+      group_wait: 10s
+      group_interval: 10s
+      repeat_interval: 12h
+
+    receivers:
+    - name: 'telegram'
+      telegram_configs:
+      - bot_token_file: '/etc/secrets/bot-token'
+        chat_id: 1453814397
+        parse_mode: 'HTML'
+        message: |
+          {{ range .Alerts }}
+          <b>🔔 {{ .Labels.severity | toUpper }}</b>
+          
+          <b>Alert:</b> {{ .Labels.alertname }}
+          <b>Service:</b> {{ .Labels.service }}
+          <b>Instance:</b> {{ .Labels.instance }}
+          
+          <b>Description:</b> {{ .Annotations.description }}
+          
+          <b>Status:</b> {{ .Status }}
+          {{ if eq .Status "firing" }}🔴{{ else }}✅{{ end }}
+          {{ end }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: alertmanager
+  namespace: service-checker
+  labels:
+    app: alertmanager
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: alertmanager
+  template:
+    metadata:
+      labels:
+        app: alertmanager
+    spec:
+      containers:
+      - name: alertmanager
+        image: prom/alertmanager:v0.26.0
+        args:
+        - --config.file=/etc/alertmanager/alertmanager.yml
+        - --storage.path=/alertmanager
+        ports:
+        - name: http
+          containerPort: 9093
+          protocol: TCP
+        env:
+        - name: TELEGRAM_CHAT_ID
+          valueFrom:
+            secretKeyRef:
+              name: telegram-bot
+              key: chat-id
+        volumeMounts:
+        - name: config
+          mountPath: /etc/alertmanager
+        - name: secrets
+          mountPath: /etc/secrets
+          readOnly: true
+        - name: storage
+          mountPath: /alertmanager
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 200m
+            memory: 256Mi
+        livenessProbe:
+          httpGet:
+            path: /-/healthy
+            port: 9093
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /-/ready
+            port: 9093
+          initialDelaySeconds: 10
+          periodSeconds: 5
+      volumes:
+      - name: config
+        configMap:
+          name: alertmanager-config
+      - name: secrets
+        secret:
+          secretName: telegram-bot
+      - name: storage
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: alertmanager
+  namespace: service-checker
+  labels:
+    app: alertmanager
+spec:
+  type: LoadBalancer
+  selector:
+    app: alertmanager
+  ports:
+  - name: http
+    port: 9093
+    targetPort: 9093
+    protocol: TCP
