@@ -9,7 +9,7 @@ from database.analytics_db import save_search_analytics
 def process_search_event(event):
     """Process single search event"""
     try:
-        print(f"📊 Processing: {event['query']} "
+        print(f"Processing: {event['query']} "
               f"(results: {event['results_count']}, "
               f"cached: {event['cached']})")
         
@@ -20,10 +20,10 @@ def process_search_event(event):
             event['cached']
         )
         
-        print(f"   ✅ Saved to DB")
+        print(f"Saved to DB")
         
     except Exception as e:
-        print(f"   ❌ Error: {e}")
+        print(f"Error: {e}")
 
 
 def callback(ch, method, properties, body):
@@ -45,9 +45,8 @@ def callback(ch, method, properties, body):
 
 
 def start_worker():
-    """Start analytics worker"""
     print("=" * 50)
-    print("🐰 RabbitMQ Analytics Worker")
+    print("RabbitMQ Analytics Worker")
     print("=" * 50)
     print("\nConnecting to RabbitMQ...")
     
@@ -67,17 +66,17 @@ def start_worker():
         on_message_callback=callback
     )
     
-    print(f"✅ Connected!")
-    print(f"📥 Listening to queue: {queue_name}")
+    print(f"Connected!")
+    print(f"Listening to queue: {queue_name}")
     print("\nWaiting for messages... (Ctrl+C to stop)\n")
     
     try:
         channel.start_consuming()
     except KeyboardInterrupt:
-        print("\n\n⏹️  Stopping worker...")
+        print("\n\n Stopping worker...")
         channel.stop_consuming()
         connection.close()
-        print("✅ Worker stopped")
+        print(" orker stopped")
 
 
 if __name__ == '__main__':

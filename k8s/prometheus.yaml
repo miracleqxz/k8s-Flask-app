@@ -12,11 +12,20 @@ data:
         cluster: 'microk8s'
         namespace: 'service-checker'
 
+    alerting:
+      alertmanagers:
+      - static_configs:
+        - targets:
+          - alertmanager.service-checker.svc.cluster.local:9093
+
+    # Load alert rules
+    rule_files:
+      - /etc/prometheus/alerts.yml
+
     scrape_configs:
       - job_name: 'prometheus'
         static_configs:
         - targets: ['localhost:9090']
-
 
       - job_name: 'postgres'
         static_configs:
@@ -47,18 +56,14 @@ data:
             names:
             - service-checker
         relabel_configs:
-        # Keep only pods with label app=flask-app
         - source_labels: [__meta_kubernetes_pod_label_app]
           regex: flask-app
           action: keep
-        # Use pod IP and port 5000
         - source_labels: [__meta_kubernetes_pod_ip]
           target_label: __address__
           replacement: ${1}:5000
-        # Add pod name as label
         - source_labels: [__meta_kubernetes_pod_name]
           target_label: pod
-        # Add node name
         - source_labels: [__meta_kubernetes_pod_node_name]
           target_label: node
 ---
@@ -95,7 +100,11 @@ spec:
           protocol: TCP
         volumeMounts:
         - name: prometheus-config
-          mountPath: /etc/prometheus
+          mountPath: /etc/prometheus/prometheus.yml
+          subPath: prometheus.yml
+        - name: prometheus-alerts
+          mountPath: /etc/prometheus/alerts.yml
+          subPath: alerts.yml
         - name: prometheus-storage
           mountPath: /prometheus
         resources:
@@ -123,6 +132,9 @@ spec:
       - name: prometheus-config
         configMap:
           name: prometheus-config
+      - name: prometheus-alerts
+        configMap:
+          name: prometheus-alerts
       - name: prometheus-storage
         emptyDir: {}
 ---
