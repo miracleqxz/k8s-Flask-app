@@ -1,0 +1,25 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: service-checker
+  namespace: argocd
+spec:
+  description: Service Checker Microservices Platform
+  
+  
+  destinations:
+  - namespace: service-checker
+    server: https://kubernetes.default.svc
+  
+  
+  sourceRepos:
+  - https://github.com/miracleqxz/k8s-Flask-app.git
+  
+  
+  clusterResourceWhitelist:
+  - group: '*'
+    kind: '*'
+  
+  namespaceResourceWhitelist:
+  - group: '*'
+    kind: '*'

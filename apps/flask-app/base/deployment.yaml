@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flask-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: flask-app
+  template:
+    metadata:
+      labels:
+        app: flask-app
+    spec:
+      containers:
+      - name: flask-app
+        image: ghcr.io/miracleqxz/k8s-flask-app:latest
+        ports:
+        - containerPort: 5000
+        env:
+        - name: POSTGRES_HOST
+          value: postgres.service-checker.svc.cluster.local
+        - name: REDIS_HOST
+          value: redis.service-checker.svc.cluster.local
+        - name: RABBITMQ_HOST
+          value: rabbitmq.service-checker.svc.cluster.local
+        - name: ELASTICSEARCH_HOST
+          value: elasticsearch.service-checker.svc.cluster.local
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
