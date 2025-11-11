@@ -18,14 +18,54 @@ spec:
         ports:
         - containerPort: 5000
         env:
+        
         - name: POSTGRES_HOST
           value: postgres.service-checker.svc.cluster.local
+        - name: POSTGRES_PORT
+          value: "5432"
+        - name: POSTGRES_USER
+          value: postgres
+        - name: POSTGRES_PASSWORD
+          value: postgres
+        - name: POSTGRES_DB
+          value: testdb
+        
+        
         - name: REDIS_HOST
           value: redis.service-checker.svc.cluster.local
+        - name: REDIS_PORT
+          value: "6379"
+        
+        
         - name: RABBITMQ_HOST
           value: rabbitmq.service-checker.svc.cluster.local
+        - name: RABBITMQ_PORT
+          value: "5672"
+        - name: RABBITMQ_USER
+          value: guest
+        - name: RABBITMQ_PASS
+          value: guest
+        
+      
         - name: ELASTICSEARCH_HOST
           value: elasticsearch.service-checker.svc.cluster.local
+        - name: ELASTICSEARCH_PORT
+          value: "9200"
+        
+    
+        - name: MINIO_ENDPOINT
+          value: minio.service-checker.svc.cluster.local:9000
+        - name: MINIO_ACCESS_KEY
+          value: minioadmin
+        - name: MINIO_SECRET_KEY
+          value: minioadmin
+        
+        
+        - name: CONSUL_HOST
+          value: consul.service-checker.svc.cluster.local
+        - name: CONSUL_PORT
+          value: "8500"
+        
         resources:
           requests:
             cpu: 100m
