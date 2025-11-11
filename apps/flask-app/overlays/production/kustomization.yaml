@@ -8,7 +8,7 @@ namespace: service-checker
 
 replicas:
   - name: flask-app
-    count: 2
+    count: 3
 
 images:
   - name: ghcr.io/miracleqxz/k8s-flask-app
