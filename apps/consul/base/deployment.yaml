@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: consul
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: consul
+  template:
+    metadata:
+      labels:
+        app: consul
+    spec:
+      enableServiceLinks: false
+      containers:
+      - name: consul
+        image: hashicorp/consul:latest
+        ports:
+        - containerPort: 8500
+          name: http
+        - containerPort: 8600
+          name: dns
+        env:
+        - name: CONSUL_BIND_INTERFACE
+          value: eth0
+        args:
+        - agent
+        - -server
+        - -ui
+        - -bootstrap-expect=1
+        - -client=0.0.0.0
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 200m
+            memory: 256Mi
