@@ -16,13 +16,14 @@ import io
 from flask import render_template
 from database.movies_db import get_all_movies, get_movie_by_id
 from database.movie_cache import get_cached_movie, set_cached_movie
+from database.redis_cache import get_from_cache, save_to_cache
 from metrics import (
     metrics_endpoint, track_request,
     CACHE_HIT_COUNT, CACHE_MISS_COUNT,
     SEARCH_QUERY_COUNT, SEARCH_RESULTS_COUNT,
     MOVIE_VIEWS
 )
-from metrics import track_request
+import json
 
 
 app = Flask(__name__)
@@ -103,11 +104,9 @@ def search():
     if not query:
         return jsonify({'error': 'Query parameter "q" is required'}), 400
     
-    # Track search
     SEARCH_QUERY_COUNT.inc()
     
     try:
-        # Check Redis cache first
         cache_key = f"search:{query}"
         cached_result = get_from_cache(cache_key)
         
@@ -116,17 +115,11 @@ def search():
             result = json.loads(cached_result)
         else:
             CACHE_MISS_COUNT.inc()
-            # Search in Elasticsearch
-            result = search_movies(query)
-            
-            # Cache the result
+            result = search_movies_es(query)
             save_to_cache(cache_key, json.dumps(result), ttl=300)
         
-        # Track results count
         SEARCH_RESULTS_COUNT.observe(len(result))
-        
-        # Log search query to database
-        save_search_query(query, len(result))
+        log_search_query(query, len(result))
         
         return jsonify(result)
         
@@ -157,7 +150,6 @@ def api_poster(filename):
 
 @app.route('/api/cache/stats')
 def api_cache_stats():
-    """Get cache statistics"""
     from database.redis_cache import get_cache_stats
     
     stats = get_cache_stats()
@@ -260,16 +252,15 @@ def movie_detail(movie_id):
 
     MOVIE_VIEWS.labels(movie_id=movie_id).inc()
     
-    # Try cache first
+    
     cached_movie, from_cache = get_cached_movie(movie_id)
     
-    # DEBUG
+    
     print(f"Movie ID: {movie_id}")
     print(f"Cached movie: {cached_movie is not None}")
     print(f"From cache: {from_cache}")
     
-    if cached_movie and from_cache:  # ← FIX: Check both conditions!
-        # Found in cache
+    if cached_movie and from_cache: 
         print(f"Serving from CACHE")
         return render_template(
             'movie_detail.html',
@@ -284,7 +275,7 @@ def movie_detail(movie_id):
     if not movie:
         return jsonify({'error': 'Movie not found'}), 404
     
-    # Convert to dict for caching
+    
     movie_dict = dict(movie)
     
     # Store in cache
