@@ -16,7 +16,7 @@ import io
 from flask import render_template
 from database.movies_db import get_all_movies, get_movie_by_id
 from database.movie_cache import get_cached_movie, set_cached_movie
-from database.redis_cache import get_from_cache, save_to_cache
+from database.redis_cache import get_cached_search, set_cached_search
 from metrics import (
     metrics_endpoint, track_request,
     CACHE_HIT_COUNT, CACHE_MISS_COUNT,
@@ -107,16 +107,15 @@ def search():
     SEARCH_QUERY_COUNT.inc()
     
     try:
-        cache_key = f"search:{query}"
-        cached_result = get_from_cache(cache_key)
+        cached_result = get_cached_search(query)
         
         if cached_result:
             CACHE_HIT_COUNT.inc()
-            result = json.loads(cached_result)
+            result = cached_result
         else:
             CACHE_MISS_COUNT.inc()
             result = search_movies_es(query)
-            save_to_cache(cache_key, json.dumps(result), ttl=300)
+            set_cached_search(query, result, ttl=300)
         
         SEARCH_RESULTS_COUNT.observe(len(result))
         log_search_query(query, len(result))
