@@ -112,15 +112,21 @@ def search():
         if cached_result:
             CACHE_HIT_COUNT.inc()
             result = cached_result
+            from_cache = True
         else:
             CACHE_MISS_COUNT.inc()
             result = search_movies_es(query)
             set_cached_search(query, result, ttl=300)
+            from_cache = False
         
         SEARCH_RESULTS_COUNT.observe(len(result))
         log_search_query(query, len(result))
         
-        return jsonify(result)
+        return jsonify({
+            'results': result,
+            'count': len(result),
+            'cached': from_cache
+        })
         
     except Exception as e:
         print(f"Search error: {e}")
