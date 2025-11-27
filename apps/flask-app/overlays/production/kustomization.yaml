@@ -6,10 +6,6 @@ bases:
 
 namespace: service-checker
 
-replicas:
-  - name: flask-app
-    count: 2
-
 images:
   - name: ghcr.io/miracleqxz/k8s-flask-app
     newTag: latest
