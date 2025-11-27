@@ -15,6 +15,7 @@ spec:
       containers:
       - name: flask-app
         image: ghcr.io/miracleqxz/k8s-flask-app:latest
+        imagePullPolicy: Always
         ports:
         - containerPort: 5000
         env:
