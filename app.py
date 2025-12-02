@@ -7,6 +7,9 @@ from services.elasticsearch_check import check_elasticsearch
 from services.minio_check import check_minio
 from services.consul_check import check_consul
 from services.prometheus_check import check_prometheus
+from services.nginx_check import check_nginx
+from services.grafana_check import check_grafana
+from services.loki_check import check_loki
 from database.elasticsearch_sync import search_movies_es
 from database.movies_db import log_search_query
 from flask import request
@@ -94,6 +97,26 @@ def check_consul_endpoint():
 @app.route('/check/prometheus')
 def check_prometheus_endpoint():
     result = check_prometheus()
+    status_code = 200 if result['status'] == 'healthy' else 503
+    return jsonify(result), status_code
+
+@app.route('/check/nginx')
+def check_nginx_endpoint():
+    result = check_nginx()
+    status_code = 200 if result['status'] == 'healthy' else 503
+    return jsonify(result), status_code
+
+
+@app.route('/check/grafana')
+def check_grafana_endpoint():
+    result = check_grafana()
+    status_code = 200 if result['status'] == 'healthy' else 503
+    return jsonify(result), status_code
+
+
+@app.route('/check/loki')
+def check_loki_endpoint():
+    result = check_loki()
     status_code = 200 if result['status'] == 'healthy' else 503
     return jsonify(result), status_code
 
@@ -227,7 +250,10 @@ def service_detail(service_name):
         'elasticsearch': check_elasticsearch,
         'minio': check_minio,
         'consul': check_consul,
-        'prometheus': check_prometheus
+        'prometheus': check_prometheus,
+        'nginx': check_nginx,
+        'grafana': check_grafana,
+        'loki': check_loki
     }
     
     if service_name not in check_functions:
