@@ -1,10 +1,8 @@
-
 import os
 
 
 class Config:
     
-
     POSTGRES_HOST = os.getenv('POSTGRES_HOST', 'postgres.service-checker.svc.cluster.local')
     POSTGRES_PORT = int(os.getenv('POSTGRES_PORT', '5432'))
     POSTGRES_DB = os.getenv('POSTGRES_DB', 'postgres')
@@ -15,7 +13,7 @@ class Config:
     REDIS_HOST = os.getenv('REDIS_HOST', 'redis.service-checker.svc.cluster.local')
     REDIS_PORT = int(os.getenv('REDIS_PORT', '6379'))
     
-    
+
     RABBITMQ_HOST = os.getenv('RABBITMQ_HOST', 'rabbitmq.service-checker.svc.cluster.local')
     RABBITMQ_PORT = int(os.getenv('RABBITMQ_PORT', '5672'))
     RABBITMQ_USER = os.getenv('RABBITMQ_USER', 'guest')
@@ -40,4 +38,21 @@ class Config:
     PROMETHEUS_PORT = int(os.getenv('PROMETHEUS_PORT', '9090'))
     
     
+    NGINX_HOST = os.getenv('NGINX_HOST', 'ingress-nginx-controller.ingress-nginx.svc.cluster.local')
+    NGINX_PORT = int(os.getenv('NGINX_PORT', '80'))
+    
+    
+    GRAFANA_HOST = os.getenv('GRAFANA_HOST', 'grafana.service-checker.svc.cluster.local')
+    GRAFANA_PORT = int(os.getenv('GRAFANA_PORT', '3000'))
+    
+    
+    LOKI_HOST = os.getenv('LOKI_HOST', 'loki.service-checker.svc.cluster.local')
+    LOKI_PORT = int(os.getenv('LOKI_PORT', '3100'))
+    
+
     TMDB_API_KEY = os.getenv('TMDB_API_KEY', '')
+    
+
+    HOST = os.getenv('FLASK_HOST', '0.0.0.0')
+    PORT = int(os.getenv('FLASK_PORT', '5000'))
+    DEBUG = os.getenv('FLASK_DEBUG', 'False').lower() == 'true'

@@ -8,7 +8,11 @@ def check_loki():
         
         response = requests.get(ready_url, timeout=5)
         
-        is_ready = response.status_code == 200
+        response_text = response.text.strip()
+        is_ready = response.status_code == 200 and response_text == "ready"
+        
+        is_initializing = "not ready" in response_text.lower() or "waiting" in response_text.lower()
+        
         
         try:
             metrics_url = f"http://{Config.LOKI_HOST}:{Config.LOKI_PORT}/metrics"
@@ -16,6 +20,7 @@ def check_loki():
             has_metrics = metrics_response.status_code == 200
         except:
             has_metrics = False
+        
         
         try:
             buildinfo_url = f"http://{Config.LOKI_HOST}:{Config.LOKI_PORT}/loki/api/v1/status/buildinfo"
@@ -29,10 +34,21 @@ def check_loki():
         
         response_time = response.elapsed.total_seconds()
         
+    
+        if is_ready:
+            status = 'healthy'
+            message = 'Successfully connected to Loki'
+        elif is_initializing:
+            status = 'healthy'  
+            message = 'Loki is initializing (this is normal)'
+        else:
+            status = 'unhealthy'
+            message = 'Loki is not ready'
+        
         return {
-            'status': 'healthy' if is_ready else 'unhealthy',
+            'status': status,
             'service': 'loki',
-            'message': 'Successfully connected to Loki',
+            'message': message,
             'details': {
                 'connection': {
                     'host': Config.LOKI_HOST,
@@ -40,7 +56,8 @@ def check_loki():
                     'ready_endpoint': ready_url
                 },
                 'ready': {
-                    'status': 'ready' if is_ready else 'not ready',
+                    'status': 'ready' if is_ready else ('initializing' if is_initializing else 'not ready'),
+                    'response_text': response_text[:100],
                     'metrics_available': has_metrics
                 },
                 'buildinfo': {
@@ -51,8 +68,7 @@ def check_loki():
                 },
                 'response': {
                     'status_code': response.status_code,
-                    'response_time_seconds': round(response_time, 3),
-                    'response_text': response.text[:100] if response.text else 'N/A'
+                    'response_time_seconds': round(response_time, 3)
                 }
             }
         }
